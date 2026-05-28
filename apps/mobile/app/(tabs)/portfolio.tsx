@@ -9,10 +9,11 @@ import { IosHeader } from "@/components/IosHeader"
 import { TickerLogo } from "@/components/TickerLogo"
 import { useMarketData } from "@/services/marketData"
 import { useAgentBoardStore } from "@/stores/agentBoardStore"
+import { uiTokens } from "@/theme/uiTokens"
 import { useSelectedPortfolioData } from "@/utils/selectedPortfolio"
 import { getTickerLogoUri } from "@/utils/tickerLogo"
 
-const PORTFOLIO_BORDER = "#C7D0DC"
+const PORTFOLIO_BORDER = uiTokens.border
 
 const money = (value: number) =>
   new Intl.NumberFormat("en-US", {
@@ -149,7 +150,7 @@ export default function PortfolioTab() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FBFCFF]">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: uiTokens.surfaceBackground }}>
       <ScrollView className="flex-1" contentContainerStyle={$scrollContent}>
         <IosHeader title="Assets" titleClassName="text-[20px] leading-[24px]" />
 

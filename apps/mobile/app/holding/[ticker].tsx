@@ -13,6 +13,7 @@ import type {
   TickerNewsItem,
 } from "@/services/api/types"
 import { useAgentBoardStore } from "@/stores/agentBoardStore"
+import { uiTokens } from "@/theme/uiTokens"
 import { getRandomAgentAvatar } from "@/utils/agentAvatars"
 import { holdingDecisions } from "@/utils/mockAppData"
 import { openLinkInBrowser } from "@/utils/openLinkInBrowser"
@@ -266,7 +267,7 @@ export default function HoldingDetailRoute() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FBFCFF]">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: uiTokens.surfaceBackground }}>
       <ScrollView className="flex-1" contentContainerStyle={$content}>
         <IosHeader
           title=""

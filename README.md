@@ -77,6 +77,12 @@ Top-level directories and their roles:
 just setup
 ```
 
+Without `just`, use:
+
+```bash
+bash scripts/setup_dev.sh
+```
+
 This installs mobile dependencies and prepares virtual environments for:
 
 - `apps/agents`
@@ -145,6 +151,12 @@ just lint          # lint/typecheck checks across mobile + python apps
 just format        # auto-format TS + Python code
 ```
 
+CI-equivalent local check:
+
+```bash
+bash scripts/local_ci.sh
+```
+
 ## API and Service Health
 
 Backend key endpoints:
@@ -198,6 +210,12 @@ For non-trivial work:
 
 ```bash
 python3 scripts/check_harness_readiness.py
+```
+
+- Run repository hygiene validation:
+
+```bash
+python3 scripts/check_repo_hygiene.py
 ```
 
 - Scaffold supported stacks from repo-owned templates:

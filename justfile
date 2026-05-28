@@ -5,6 +5,9 @@ default:
 
 setup: setup-frontend setup-python
 
+setup-dev:
+  bash scripts/setup_dev.sh
+
 format-fix: format
 
 setup-frontend:
@@ -61,7 +64,14 @@ format-py:
   fi
 
 # CI-like checks for both codebases (excluding tests)
-lint: lint-ts lint-py
+lint: repo-hygiene lint-ts lint-py
+
+repo-hygiene:
+  python3 scripts/check_harness_readiness.py
+  python3 scripts/check_repo_hygiene.py
+
+ci-local:
+  bash scripts/local_ci.sh
 
 lint-ts:
   cd apps/mobile && \
@@ -81,5 +91,6 @@ lint-py:
   "$PYTHON" -m ruff check apps/agents apps/backend && \
   "$PYTHON" -m build apps/agents && \
   "$PYTHON" -m build apps/backend && \
+  "$PYTHON" scripts/check_api_contracts.py && \
   "$PYTHON" -m py_compile apps/agents/main.py apps/backend/main.py && \
   find apps/agents/src apps/backend/src -name "*.py" -print0 | xargs -0 -n1 "$PYTHON" -m py_compile

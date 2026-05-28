@@ -28,6 +28,20 @@ This repository contains early implementation slices for the Finly product and r
 8. `.agents/skills/`
    Stores repository-local agent skills for recurring workflows such as setup and git operations.
 
+## Dependency Direction (Enforced by Convention + CI)
+
+`apps/mobile` -> `apps/backend` -> `apps/agents`
+
+- Mobile must call backend APIs only.
+- Backend owns user/session data, report/chat orchestration, and persistence concerns.
+- Agents runtime stays stateless and focused on analysis/pipeline execution.
+- Backend may depend on agents endpoints, but agents must not import backend modules.
+
+Guardrails:
+
+- CI route contract checks validate expected public endpoints for backend and agents.
+- Repository hygiene checks block generated/runtime artifacts from source control.
+
 ## Planned Evolution
 
 When the hackathon build is stabilized, extend this file with:

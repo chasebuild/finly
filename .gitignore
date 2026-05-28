@@ -1,5 +1,45 @@
+.DS_Store
 .env
+.env.*
+!.env.example
+
+# Node / Expo
 node_modules/
+apps/mobile/node_modules/
+apps/mobile/.expo/
+apps/mobile/dist/
+apps/mobile/web-build/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.so
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+build/
+dist/
+*.egg-info/
+
+# Runtime artifacts
 *.db
+*.sqlite
+*.sqlite3
+apps/backend/finly.db
+apps/backend/src/finly_backend/finly.db
+apps/agents/src/finly_agents/finly.db
+
+# Generated agent artifacts
+apps/agents/eval_results/
+apps/agents/src/tradingagents/eval_results/
+apps/agents/src/tradingagents/dataflows/data_cache/
+
+# Package manager lockfiles we do not use at repo root
 package-lock.json
 package.json

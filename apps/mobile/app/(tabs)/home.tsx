@@ -24,11 +24,12 @@ import { api } from "@/services/api"
 import { useMarketData } from "@/services/marketData"
 import { usePortfolioGrowthHistory } from "@/services/portfolioHistory"
 import { useOnboardingStore } from "@/stores/onboardingStore"
+import { uiTokens } from "@/theme/uiTokens"
 import { getRandomAgentAvatar } from "@/utils/agentAvatars"
 import { teamAgents } from "@/utils/mockAppData"
 import { useSelectedPortfolioData } from "@/utils/selectedPortfolio"
 
-const BORDER = "#C7D0DC"
+const BORDER = uiTokens.border
 const COLLAPSED_VISIBLE_HEIGHT = 228
 const SNAP_THRESHOLD = 96
 const PORTFOLIO_GROWTH_POINTS = [18, 24, 22, 31, 29, 37, 42, 40, 49, 58, 55, 64] as const
@@ -187,7 +188,7 @@ export default function HomeTab() {
   )
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FBFCFF]">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: uiTokens.surfaceBackground }}>
       <View className="flex-1">
         <ScrollView className="flex-1" contentContainerStyle={$scrollContent}>
           <MotiView

@@ -7,12 +7,13 @@ import { SafeAreaView } from "react-native-safe-area-context"
 
 import { TickerLogo } from "@/components/TickerLogo"
 import { useAgentBoardStore } from "@/stores/agentBoardStore"
+import { uiTokens } from "@/theme/uiTokens"
 import { getRandomAgentAvatar } from "@/utils/agentAvatars"
 import { useSelectedPortfolioData } from "@/utils/selectedPortfolio"
 import { getTickerLogoUri } from "@/utils/tickerLogo"
 
-const BLUE = "#2453FF"
-const BORDER = "#C7D0DC"
+const BLUE = uiTokens.actionPrimary
+const BORDER = uiTokens.border
 
 const decisionColors = {
   Buy: { background: "#E9F7EF", text: "#1F8A4C" },
@@ -74,7 +75,7 @@ export default function BoardTab() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FBFCFF]">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: uiTokens.surfaceBackground }}>
       <ScrollView className="flex-1" contentContainerStyle={$content}>
         <View className="px-4 pb-4 pt-2">
           <View

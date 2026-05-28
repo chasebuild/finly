@@ -185,6 +185,7 @@ railway domain
 
 ## Pre-Deploy Checklist
 
+- [ ] Run `bash scripts/local_ci.sh` from repo root (or equivalent CI checks)
 - [ ] `PORT` env var fix is applied (already done in both `server.py` and `agent_server.py`)
 - [ ] `OPENROUTER_API_KEY` set in Railway env vars
 - [ ] `ELEVENLABS_API_KEY` set if you want voice (optional)
