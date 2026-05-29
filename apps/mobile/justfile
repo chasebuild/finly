@@ -1,0 +1,18 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+default:
+  @just --list
+
+start:
+  pnpm run start
+
+dev: start
+
+android:
+  pnpm run android
+
+ios:
+  pnpm run ios
+
+web:
+  pnpm run web
