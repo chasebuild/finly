@@ -33,6 +33,7 @@ const moneyWithCents = (value: number) =>
 const signedMoney = (value: number) => `${value >= 0 ? "+" : "-"}${moneyWithCents(Math.abs(value))}`
 
 const signedPct = (value: number) => `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`
+const roundToCents = (value: number) => Math.round(value * 100) / 100
 const formatLastRefresh = (timestamp: number | null) => {
   if (!timestamp) return "Last refresh unavailable"
   const date = new Date(timestamp)
@@ -72,7 +73,28 @@ export default function PortfolioTab() {
   const boardThreads = useAgentBoardStore((state) => state.threads)
   const { quotes, lastUpdatedAt } = useMarketData(holdings.map((holding) => holding.ticker))
   const showPortfolioSkeleton = false
-  const enrichedHoldings = useMemo(() => holdings.map((holding) => ({ ...holding })), [holdings])
+  const enrichedHoldings = useMemo(() => {
+    const withLiveValues = holdings.map((holding) => {
+      const liveQuote = quotes[holding.ticker]
+      const valueUsd = liveQuote
+        ? roundToCents(liveQuote.price * holding.shares)
+        : roundToCents(holding.valueUsd)
+      return {
+        ...holding,
+        valueUsd,
+        changePercent: liveQuote?.change_pct ?? holding.changePercent,
+      }
+    })
+    const totalValue = withLiveValues.reduce((sum, holding) => sum + holding.valueUsd, 0)
+    if (totalValue <= 0) {
+      return withLiveValues.map((holding) => ({ ...holding, allocationPercent: 0 }))
+    }
+
+    return withLiveValues.map((holding) => ({
+      ...holding,
+      allocationPercent: (holding.valueUsd / totalValue) * 100,
+    }))
+  }, [holdings, quotes])
   const totalValueUsd = useMemo(
     () => enrichedHoldings.reduce((sum, holding) => sum + holding.valueUsd, 0),
     [enrichedHoldings],

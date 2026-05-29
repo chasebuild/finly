@@ -18,6 +18,7 @@ import type {
   MarketTickerProfile,
   OnboardingRequest,
   OnboardingResponse,
+  HeartbeatAnalyzeStreamEvent,
   PanelHistoryMessage,
   PanelChatRequest,
   PanelChatResponse,
@@ -601,9 +602,10 @@ export class Api {
         if (fallback.kind !== "ok") return fallback
         onEvent({ type: "started" })
         for (const message of fallback.data.agent_responses) {
-          onEvent({ type: "agent_message_start", message })
-          onEvent({ type: "agent_message_delta", message, delta: message.response })
-          onEvent({ type: "agent_message_done", message })
+          const messageId = `fallback_${message.agent_role}_${Date.now()}`
+          onEvent({ type: "agent_message_start", message, message_id: messageId })
+          onEvent({ type: "agent_message_delta", message, delta: message.response, message_id: messageId })
+          onEvent({ type: "agent_message_done", message, message_id: messageId })
         }
         onEvent({
           type: "memory_updates",
@@ -667,7 +669,7 @@ export class Api {
   async heartbeatAnalyzeStream(
     userId: string,
     tickers?: string[],
-    onEvent?: (event: Record<string, unknown>) => void,
+    onEvent?: (event: HeartbeatAnalyzeStreamEvent) => void,
   ): Promise<{ kind: "ok" } | GeneralApiProblem> {
     try {
       const url = joinApiUrl(this.config.url, "/api/heartbeat/analyze")
@@ -695,9 +697,12 @@ export class Api {
           const payload = line.slice(5).trim()
           if (!payload || payload === "[DONE]") continue
           try {
-            onEvent?.(JSON.parse(payload))
+            onEvent?.(JSON.parse(payload) as HeartbeatAnalyzeStreamEvent)
           } catch {
-            // Ignore malformed SSE
+            onEvent?.({
+              type: "error",
+              error: "malformed_event_payload",
+            })
           }
         }
         return { kind: "ok" }
@@ -720,9 +725,12 @@ export class Api {
           const payload = line.slice(5).trim()
           if (!payload || payload === "[DONE]") continue
           try {
-            onEvent?.(JSON.parse(payload))
+            onEvent?.(JSON.parse(payload) as HeartbeatAnalyzeStreamEvent)
           } catch {
-            // Ignore malformed SSE
+            onEvent?.({
+              type: "error",
+              error: "malformed_event_payload",
+            })
           }
         }
       }

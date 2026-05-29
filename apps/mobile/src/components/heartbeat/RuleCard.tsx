@@ -3,9 +3,10 @@ import { Pressable, Switch, Text, View } from "react-native"
 import { Ionicons } from "@expo/vector-icons"
 
 import type { HeartbeatRuleResponse } from "@/services/api/types"
+import { uiTokens } from "@/theme/uiTokens"
 
-const BORDER = "#C7D0DC"
-const BLUE = "#2453FF"
+const BORDER = uiTokens.border
+const BLUE = uiTokens.actionPrimary
 
 const operatorLabels: Record<string, string> = {
   gt: "above",

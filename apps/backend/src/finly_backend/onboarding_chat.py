@@ -164,8 +164,6 @@ async def run_onboarding_chat(user_id: str, message: str) -> dict:
     for msg in history:
         messages.append({"role": msg["role"], "content": msg["content"]})
 
-    messages.append({"role": "user", "content": message})
-
     # Force completion on last turn
     if turn_count + 1 >= MAX_TURNS:
         messages[0]["content"] += (
@@ -236,8 +234,6 @@ async def run_onboarding_chat_stream(user_id: str, message: str) -> AsyncIterato
     history = get_conversation_history(user_id, conv_type="onboarding_voice", limit=100)
     for msg in history:
         messages.append({"role": msg["role"], "content": msg["content"]})
-
-    messages.append({"role": "user", "content": message})
 
     if turn_count + 1 >= MAX_TURNS:
         messages[0]["content"] += (

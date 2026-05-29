@@ -2,7 +2,11 @@ import { create } from "zustand"
 
 import { resolveScopedFinlyUserId } from "@/services/agentUser"
 import { api } from "@/services/api"
-import type { HeartbeatRuleResponse, HeartbeatResultResponse } from "@/services/api/types"
+import type {
+  HeartbeatAnalyzeStreamEvent,
+  HeartbeatRuleResponse,
+  HeartbeatResultResponse,
+} from "@/services/api/types"
 import { useOnboardingStore } from "@/stores/onboardingStore"
 import { DEFAULT_STOCK_ACCOUNT_ID } from "@/utils/mockStockAccounts"
 import { loadString, saveString } from "@/utils/storage"
@@ -37,6 +41,7 @@ type HeartbeatState = {
   liveResults: Record<string, LiveResult>
   isCreatingRule: boolean
   lastAnalysisError: string | null
+  lastRuleError: string | null
 
   // Actions
   refresh: (userId: string) => Promise<void>
@@ -106,6 +111,7 @@ export const useHeartbeatStore = create<HeartbeatState>((set, get) => ({
   liveResults: {},
   isCreatingRule: false,
   lastAnalysisError: null,
+  lastRuleError: null,
 
   refresh: async (userId: string) => {
     const [rulesRes, resultsRes] = await Promise.all([
@@ -136,40 +142,49 @@ export const useHeartbeatStore = create<HeartbeatState>((set, get) => ({
     const analyzeResult = await api.heartbeatAnalyzeStream(
       userId,
       uniqueTickers.length > 0 ? uniqueTickers : undefined,
-      (event: Record<string, unknown>) => {
+      (event: HeartbeatAnalyzeStreamEvent) => {
         switch (event.type) {
           case "started":
-            set({ analyzingTickers: (event.tickers as string[]) ?? [] })
+            set({ analyzingTickers: event.tickers ?? [] })
             break
           case "ticker_start":
-            set({ currentTicker: event.ticker as string })
+            set({ currentTicker: event.ticker ?? null })
             break
           case "ticker_done":
+            if (!event.ticker) return
             set({
               currentTicker: null,
-              completedTickers: [...get().completedTickers, event.ticker as string],
+              completedTickers: [...get().completedTickers, event.ticker],
               liveResults: {
                 ...get().liveResults,
-                [event.ticker as string]: {
-                  decision: event.decision as string,
-                  summary: event.summary as string,
-                  severity: event.severity as string,
+                [event.ticker]: {
+                  decision: event.decision ?? "HOLD",
+                  summary: event.summary ?? "",
+                  severity: event.severity ?? "info",
                 },
               },
             })
             break
           case "ticker_error":
+            if (!event.ticker) return
             set({
               currentTicker: null,
-              completedTickers: [...get().completedTickers, event.ticker as string],
+              completedTickers: [...get().completedTickers, event.ticker],
               liveResults: {
                 ...get().liveResults,
-                [event.ticker as string]: {
+                [event.ticker]: {
                   decision: "ERROR",
-                  summary: (event.error as string) ?? "Analysis failed",
+                  summary: event.error ?? "Analysis failed",
                   severity: "critical",
                 },
               },
+            })
+            break
+          case "error":
+            set({
+              isAnalyzing: false,
+              currentTicker: null,
+              lastAnalysisError: event.error ?? "Heartbeat stream failed.",
             })
             break
           case "done":
@@ -210,40 +225,49 @@ export const useHeartbeatStore = create<HeartbeatState>((set, get) => ({
       analyzingTickers: DEMO_TICKERS,
     })
 
-    await api.heartbeatAnalyzeStream(userId, DEMO_TICKERS, (event: Record<string, unknown>) => {
+    await api.heartbeatAnalyzeStream(userId, DEMO_TICKERS, (event: HeartbeatAnalyzeStreamEvent) => {
       switch (event.type) {
         case "started":
-          set({ analyzingTickers: (event.tickers as string[]) ?? DEMO_TICKERS })
+          set({ analyzingTickers: event.tickers ?? DEMO_TICKERS })
           break
         case "ticker_start":
-          set({ currentTicker: event.ticker as string })
+          set({ currentTicker: event.ticker ?? null })
           break
         case "ticker_done":
+          if (!event.ticker) return
           set({
             currentTicker: null,
-            completedTickers: [...get().completedTickers, event.ticker as string],
+            completedTickers: [...get().completedTickers, event.ticker],
             liveResults: {
               ...get().liveResults,
-              [event.ticker as string]: {
-                decision: event.decision as string,
-                summary: event.summary as string,
-                severity: event.severity as string,
+              [event.ticker]: {
+                decision: event.decision ?? "HOLD",
+                summary: event.summary ?? "",
+                severity: event.severity ?? "info",
               },
             },
           })
           break
         case "ticker_error":
+          if (!event.ticker) return
           set({
             currentTicker: null,
-            completedTickers: [...get().completedTickers, event.ticker as string],
+            completedTickers: [...get().completedTickers, event.ticker],
             liveResults: {
               ...get().liveResults,
-              [event.ticker as string]: {
+              [event.ticker]: {
                 decision: "ERROR",
-                summary: (event.error as string) ?? "Analysis failed",
+                summary: event.error ?? "Analysis failed",
                 severity: "critical",
               },
             },
+          })
+          break
+        case "error":
+          set({
+            isAnalyzing: false,
+            currentTicker: null,
+            lastAnalysisError: event.error ?? "Heartbeat stream failed.",
           })
           break
         case "done":
@@ -260,13 +284,15 @@ export const useHeartbeatStore = create<HeartbeatState>((set, get) => ({
   },
 
   createRule: async (userId: string, rawRule: string) => {
-    set({ isCreatingRule: true })
+    set({ isCreatingRule: true, lastRuleError: null })
     try {
       const res = await api.createHeartbeatRule(userId, rawRule)
       if (res.kind === "ok") {
         const rules = [res.rule, ...get().rules]
         set({ rules })
         await persist(rules, get().results)
+      } else {
+        set({ lastRuleError: "Couldn't parse that rule. Try: 'Alert me if AAPL drops 5%'" })
       }
     } finally {
       set({ isCreatingRule: false })

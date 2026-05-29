@@ -250,6 +250,7 @@ export interface PanelChatStreamEvent {
     | "error"
     | "done"
   message?: AgentPanelMessage
+  message_id?: string
   delta?: string
   memory_updates?: string[]
 }
@@ -314,16 +315,29 @@ export interface VoiceOnboardingResponse {
   message: string
   audio_b64: string | null
   is_complete: boolean
+  status: "started" | "in_progress" | "profile_ready" | "completed" | "error"
+  recoverable_error: string | null
   turn_count: number
   profile: VoiceOnboardingProfile | null
   transcript: string | null
 }
 
 export interface VoiceOnboardingStreamEvent {
-  type: "started" | "delta" | "done" | "error"
+  type: "started" | "delta" | "done" | "error" | "status"
   delta?: string
   result?: VoiceOnboardingResponse
   message?: string
+  status?: VoiceOnboardingResponse["status"]
+}
+
+export interface HeartbeatAnalyzeStreamEvent {
+  type: "started" | "ticker_start" | "ticker_done" | "ticker_error" | "error" | "done"
+  tickers?: string[]
+  ticker?: string
+  decision?: string
+  summary?: string
+  severity?: string
+  error?: string
 }
 
 // ---------------------------------------------------------------------------

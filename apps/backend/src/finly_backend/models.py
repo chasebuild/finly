@@ -270,6 +270,8 @@ class VoiceOnboardingResponse(BaseModel):
     message: str
     audio_b64: str | None = None  # TTS response audio
     is_complete: bool = False
+    status: str = "in_progress"  # started | in_progress | profile_ready | completed | error
+    recoverable_error: str | None = None
     turn_count: int = 0
     profile: VoiceOnboardingProfile | None = None
     transcript: str | None = None  # transcribed text from audio input

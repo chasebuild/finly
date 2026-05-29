@@ -25,6 +25,8 @@ export type AgentThreadMessage = {
   content: string
   kind: ThreadMessageKind
   createdAt: string
+  deliveryStatus?: "sending" | "streaming" | "done" | "failed"
+  source?: string
   agentRole?: string
 }
 
@@ -161,6 +163,7 @@ const createMessage = (
   content,
   kind,
   createdAt: extras.createdAt ?? nowIso(),
+  deliveryStatus: "done",
   agentRole: extras.agentRole,
 })
 
@@ -260,9 +263,13 @@ const normalizeThread = (thread: AgentThread): AgentThread => ({
         ...message,
         author: ADVISOR_AUTHOR,
         agentRole: resolveAgentRoleKey(message.agentRole),
+        deliveryStatus: message.deliveryStatus ?? "done",
       }
     }
-    return message
+    return {
+      ...message,
+      deliveryStatus: message.deliveryStatus ?? "done",
+    }
   }),
   reportVersions:
     Array.isArray(thread.reportVersions) && thread.reportVersions.length > 0
@@ -534,6 +541,7 @@ export const useAgentBoardStore = create<AgentBoardState>((set, get) => ({
       prompt,
       existing.stage === "intake" ? "intake" : "panel",
     )
+    userMessage.deliveryStatus = "sending"
 
     set((state) => ({
       threads: state.threads.map((thread) =>
@@ -727,7 +735,7 @@ export const useAgentBoardStore = create<AgentBoardState>((set, get) => ({
 
         if (!event.message) return
         const message = event.message as AgentPanelMessage
-        const roleKey = message.agent_role || message.agent_name.toLowerCase()
+        const roleKey = event.message_id || message.agent_role || message.agent_name.toLowerCase()
 
         if (event.type === "agent_message_start") {
           const id = makeId(`stream_${roleKey}`)
@@ -746,6 +754,8 @@ export const useAgentBoardStore = create<AgentBoardState>((set, get) => ({
                     content: "",
                     kind: "panel",
                     createdAt: nowIso(),
+                    deliveryStatus: "streaming",
+                    source: message.agent_name,
                     agentRole: message.agent_role,
                   },
                 ],
@@ -765,7 +775,9 @@ export const useAgentBoardStore = create<AgentBoardState>((set, get) => ({
               return {
                 ...thread,
                 messages: thread.messages.map((item) =>
-                  item.id === id ? { ...item, content: `${item.content}${delta}` } : item,
+                  item.id === id
+                    ? { ...item, content: `${item.content}${delta}`, deliveryStatus: "streaming" }
+                    : item,
                 ),
               }
             }),
@@ -798,7 +810,9 @@ export const useAgentBoardStore = create<AgentBoardState>((set, get) => ({
               return {
                 ...thread,
                 messages: thread.messages.map((item) =>
-                  item.id === id ? { ...item, content: message.response } : item,
+                  item.id === id
+                    ? { ...item, content: message.response, deliveryStatus: "done" }
+                    : item,
                 ),
               }
             }),
@@ -816,6 +830,11 @@ export const useAgentBoardStore = create<AgentBoardState>((set, get) => ({
                 stage: "error",
                 isBusy: false,
                 lastError: streamError || "Team chat failed. Please try again.",
+                messages: thread.messages.map((item) =>
+                  item.role === "user" && item.content === prompt && item.deliveryStatus === "sending"
+                    ? { ...item, deliveryStatus: "failed" }
+                    : item,
+                ),
               }
             : thread,
         ),
@@ -842,7 +861,14 @@ export const useAgentBoardStore = create<AgentBoardState>((set, get) => ({
           isBusy: false,
           lastError: undefined,
           updatedAt: nowIso(),
-          messages: [...thread.messages, ...(memoryMessage ? [memoryMessage] : [])],
+          messages: [
+            ...thread.messages.map((item) =>
+              item.role === "user" && item.content === prompt && item.deliveryStatus === "sending"
+                ? { ...item, deliveryStatus: "done" }
+                : item,
+            ),
+            ...(memoryMessage ? [memoryMessage] : []),
+          ],
           memoryUpdates: latestMemoryUpdates,
         }
       }),

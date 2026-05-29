@@ -713,7 +713,7 @@ You parse investment monitoring rules from natural language into JSON.
 
 Return ONLY a JSON object with these fields:
 - ticker: string (stock symbol, uppercase)
-- metric: string (one of: "price", "price_change_pct", "volume")
+- metric: string (one of: "price", "price_change_pct")
 - operator: string (one of: "gt", "lt", "gte", "lte")
 - threshold: number
 
@@ -749,7 +749,20 @@ Return ONLY the JSON, no explanation."""
             if content.startswith("```"):
                 content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
             parsed = json.loads(content)
+            metric = str(parsed.get("metric", "")).strip()
+            if metric == "volume":
+                raise HTTPException(
+                    status_code=422,
+                    detail="Unsupported metric 'volume'. Supported metrics: price, price_change_pct.",
+                )
+            if metric not in {"price", "price_change_pct"}:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Invalid metric. Supported metrics: price, price_change_pct.",
+                )
             return parsed
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception("Rule parsing failed")
         raise HTTPException(status_code=500, detail=f"Failed to parse rule: {e}")

@@ -12,15 +12,15 @@ import asyncio
 import logging
 import threading
 from collections import defaultdict
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from threading import Lock
+from zoneinfo import ZoneInfo
 
 from finly_backend.models import HeartbeatAlert
 
 logger = logging.getLogger("finly_backend.heartbeat")
 
-# US Eastern timezone offset (simplified — doesn't handle DST perfectly)
-_ET_OFFSET = timedelta(hours=-4)  # EDT
+_US_EASTERN_TZ = ZoneInfo("America/New_York")
 
 _SEVERITIES = {"info", "warning", "critical"}
 
@@ -109,12 +109,9 @@ SCENARIOS: dict[str, dict[str, str]] = {
 
 _alert_queues: dict[str, list[HeartbeatAlert]] = defaultdict(list)
 _alert_lock = Lock()
-
-
 def _is_market_hours() -> bool:
     """Check if US stock market is currently open (9:30-16:00 ET, weekdays)."""
-    now_utc = datetime.now(timezone.utc)
-    now_et = now_utc + _ET_OFFSET
+    now_et = datetime.now(_US_EASTERN_TZ)
     if now_et.weekday() >= 5:  # Saturday=5, Sunday=6
         return False
     market_open = now_et.replace(hour=9, minute=30, second=0, microsecond=0)
@@ -229,8 +226,8 @@ async def _check_rules_cycle() -> None:
                     continue
 
                 logger.info(
-                    "Heartbeat: rule %s triggered for %s (user %s)",
-                    rule["id"], ticker, user_id,
+                    "Heartbeat: rule_triggered rule_id=%s user_id=%s ticker=%s price=%.4f prev_close=%.4f",
+                    rule["id"], user_id, ticker, current_price, prev_close,
                 )
 
                 # Run full pipeline analysis
@@ -249,8 +246,8 @@ async def _check_rules_cycle() -> None:
                     )
                 except Exception as e:
                     logger.exception(
-                        "Heartbeat: pipeline failed for rule %s ticker %s: %s",
-                        rule["id"], ticker, e,
+                        "Heartbeat: pipeline_failed rule_id=%s user_id=%s ticker=%s err=%s",
+                        rule["id"], user_id, ticker, e,
                     )
             except Exception as e:
                 logger.exception("Heartbeat: error processing rule %s: %s", rule["id"], e)

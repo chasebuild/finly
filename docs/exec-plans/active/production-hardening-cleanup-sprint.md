@@ -45,6 +45,10 @@ The repo has drift from hackathon velocity (tracked runtime artifacts, fragmente
 
 - 2026-05-28: Started plan.
 - 2026-05-28: Added hygiene and API contract scripts, local CI script, and strict CI workflow.
+- 2026-05-28: Added onboarding lifecycle contracts/status fields and streaming-recovery semantics.
+- 2026-05-28: Hardened heartbeat stream parsing, rule parse error semantics, and scheduler duplicate-trigger guard.
+- 2026-05-28: Improved agent panel stream idempotency with stream `message_id` propagation and client delivery statuses.
+- 2026-05-28: Standardized heartbeat UI surfaces to shared UI tokens and added rule-level error feedback.
 
 ## Verification
 

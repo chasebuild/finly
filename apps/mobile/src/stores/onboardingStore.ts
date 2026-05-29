@@ -7,6 +7,7 @@ export type InvestmentHorizon = "short" | "medium" | "long"
 export type FinancialKnowledge = "novice" | "savvy" | "pro"
 export type PortfolioType = "crypto" | "stock"
 export type StockAccountId = "growth-tech" | "dividend-core" | "balanced-index"
+export type OnboardingLifecycle = "started" | "in_progress" | "profile_ready" | "completed" | "error"
 
 export type OnboardingState = {
   name: string
@@ -19,6 +20,8 @@ export type OnboardingState = {
   investorProfileReviewed: boolean
   accountSelectionCompleted: boolean
   onboardingCompleted: boolean
+  onboardingLifecycle: OnboardingLifecycle
+  onboardingError: string | null
   setName: (value: string) => void
   setRiskExpertise: (value: RiskExpertise) => void
   setInvestmentHorizon: (value: InvestmentHorizon) => void
@@ -29,6 +32,8 @@ export type OnboardingState = {
   setInvestorProfileReviewed: (value: boolean) => void
   setAccountSelectionCompleted: (value: boolean) => void
   setOnboardingCompleted: (value: boolean) => void
+  setOnboardingLifecycle: (value: OnboardingLifecycle) => void
+  setOnboardingError: (value: string | null) => void
   completeOnboarding: () => void
   reset: () => void
 }
@@ -48,6 +53,8 @@ const initialState: Pick<
   | "investorProfileReviewed"
   | "accountSelectionCompleted"
   | "onboardingCompleted"
+  | "onboardingLifecycle"
+  | "onboardingError"
 > = {
   name: "",
   riskExpertise: "beginner",
@@ -59,6 +66,8 @@ const initialState: Pick<
   investorProfileReviewed: false,
   accountSelectionCompleted: false,
   onboardingCompleted: false,
+  onboardingLifecycle: "started",
+  onboardingError: null,
 }
 
 type PersistedState = Pick<
@@ -73,6 +82,8 @@ type PersistedState = Pick<
   | "investorProfileReviewed"
   | "accountSelectionCompleted"
   | "onboardingCompleted"
+  | "onboardingLifecycle"
+  | "onboardingError"
 >
 
 type PersistedPayload = {
@@ -100,6 +111,8 @@ const selectPersistedState = (state: OnboardingState): PersistedState => ({
   investorProfileReviewed: state.investorProfileReviewed,
   accountSelectionCompleted: state.accountSelectionCompleted,
   onboardingCompleted: state.onboardingCompleted,
+  onboardingLifecycle: state.onboardingLifecycle,
+  onboardingError: state.onboardingError,
 })
 
 const isObjectRecord = (value: unknown): value is Record<string, unknown> =>
@@ -127,6 +140,18 @@ const asPortfolioType = (value: unknown): PortfolioType | null => {
 
 const asStockAccountId = (value: unknown): StockAccountId | null => {
   if (value === "growth-tech" || value === "dividend-core" || value === "balanced-index")
+    return value
+  return null
+}
+
+const asOnboardingLifecycle = (value: unknown): OnboardingLifecycle | null => {
+  if (
+    value === "started" ||
+    value === "in_progress" ||
+    value === "profile_ready" ||
+    value === "completed" ||
+    value === "error"
+  )
     return value
   return null
 }
@@ -164,6 +189,11 @@ const parsePersistedState = (value: unknown): PersistedState | null => {
 
   const onboardingCompleted =
     typeof stateRecord.onboardingCompleted === "boolean" ? stateRecord.onboardingCompleted : false
+  const onboardingLifecycle =
+    asOnboardingLifecycle(stateRecord.onboardingLifecycle) ??
+    (onboardingCompleted ? "completed" : "started")
+  const onboardingError =
+    typeof stateRecord.onboardingError === "string" ? stateRecord.onboardingError : null
   const investorProfileReviewed =
     typeof stateRecord.investorProfileReviewed === "boolean"
       ? stateRecord.investorProfileReviewed
@@ -184,6 +214,8 @@ const parsePersistedState = (value: unknown): PersistedState | null => {
     investorProfileReviewed,
     accountSelectionCompleted,
     onboardingCompleted,
+    onboardingLifecycle,
+    onboardingError,
   }
 }
 
@@ -232,8 +264,16 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
     })),
   setInvestorProfileReviewed: (investorProfileReviewed) => set({ investorProfileReviewed }),
   setAccountSelectionCompleted: (accountSelectionCompleted) => set({ accountSelectionCompleted }),
-  setOnboardingCompleted: (onboardingCompleted) => set({ onboardingCompleted }),
-  completeOnboarding: () => set({ onboardingCompleted: true }),
+  setOnboardingCompleted: (onboardingCompleted) =>
+    set({
+      onboardingCompleted,
+      onboardingLifecycle: onboardingCompleted ? "completed" : "in_progress",
+      onboardingError: null,
+    }),
+  setOnboardingLifecycle: (onboardingLifecycle) => set({ onboardingLifecycle }),
+  setOnboardingError: (onboardingError) => set({ onboardingError }),
+  completeOnboarding: () =>
+    set({ onboardingCompleted: true, onboardingLifecycle: "completed", onboardingError: null }),
   reset: () => set({ ...initialState }),
 }))
 

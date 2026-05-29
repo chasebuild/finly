@@ -12,12 +12,13 @@ import { TickerLogo } from "@/components/TickerLogo"
 import { resolveScopedFinlyUserId } from "@/services/agentUser"
 import { useHeartbeatStore } from "@/stores/heartbeatStore"
 import { useOnboardingStore } from "@/stores/onboardingStore"
+import { uiTokens } from "@/theme/uiTokens"
 import { DEFAULT_STOCK_ACCOUNT_ID } from "@/utils/mockStockAccounts"
 import { useSelectedPortfolioData } from "@/utils/selectedPortfolio"
 import { getTickerLogoUri } from "@/utils/tickerLogo"
 
-const BLUE = "#2453FF"
-const BORDER = "#C7D0DC"
+const BLUE = uiTokens.actionPrimary
+const BORDER = uiTokens.border
 
 const decisionColors: Record<string, { bg: string; text: string }> = {
   BUY: { bg: "#E9F7EF", text: "#1F8A4C" },
@@ -62,6 +63,7 @@ export default function HeartbeatTab() {
   const liveResults = useHeartbeatStore((s) => s.liveResults)
   const isCreatingRule = useHeartbeatStore((s) => s.isCreatingRule)
   const lastAnalysisError = useHeartbeatStore((s) => s.lastAnalysisError)
+  const lastRuleError = useHeartbeatStore((s) => s.lastRuleError)
 
   const startAnalysis = useHeartbeatStore((s) => s.startAnalysis)
   const startDemoAnalysis = useHeartbeatStore((s) => s.startDemoAnalysis)
@@ -94,7 +96,7 @@ export default function HeartbeatTab() {
   const hasHoldings = holdings.length > 0
 
   return (
-    <SafeAreaView className="flex-1 bg-[#FBFCFF]">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: uiTokens.surfaceBackground }}>
       <ScrollView contentContainerStyle={$scrollContent}>
         <IosHeader title="Heartbeat" titleClassName="text-[20px] leading-[24px]" />
 
@@ -260,6 +262,9 @@ export default function HeartbeatTab() {
               </View>
 
               {/* Rules list */}
+              {lastRuleError ? (
+                <Text className="mt-3 font-sans text-[13px] text-[#D64545]">{lastRuleError}</Text>
+              ) : null}
               {rules.length === 0 ? (
                 <View className="mt-4 rounded-[20px] bg-[#F6F8FF] p-4">
                   <Text className="font-sans text-[16px] font-semibold text-[#0F1728]">

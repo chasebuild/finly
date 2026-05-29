@@ -17,6 +17,14 @@ def _route_paths(app) -> set[str]:
     return {getattr(route, "path", "") for route in app.routes}
 
 
+def _model_fields(model) -> set[str]:
+    if hasattr(model, "model_fields"):  # pydantic v2
+        return set(model.model_fields.keys())
+    if hasattr(model, "__fields__"):  # pydantic v1 compat
+        return set(model.__fields__.keys())
+    return set()
+
+
 def main() -> int:
     sys.path.insert(0, str(BACKEND_SRC))
     sys.path.insert(0, str(AGENTS_SRC))
@@ -39,6 +47,10 @@ def main() -> int:
         "/healthz",
         "/api/report/generate",
         "/api/report/chat",
+        "/api/report/chat/stream",
+        "/api/onboarding/voice",
+        "/api/onboarding/voice/stream",
+        "/api/heartbeat/analyze",
         "/api/chat",
     }
     required_agents = {
@@ -60,6 +72,30 @@ def main() -> int:
             print("Missing agent routes:")
             for path in missing_agents:
                 print(f"- {path}")
+        return 1
+
+    models_module = importlib.import_module("finly_backend.models")
+    voice_fields = _model_fields(getattr(models_module, "VoiceOnboardingResponse"))
+    voice_expected = {
+        "status",
+        "recoverable_error",
+        "is_complete",
+        "message",
+    }
+
+    missing_voice_fields = sorted(voice_expected - voice_fields)
+    if missing_voice_fields:
+        print("API contract check failed.")
+        print("VoiceOnboardingResponse missing fields:")
+        for field in missing_voice_fields:
+            print(f"- {field}")
+        return 1
+
+    mobile_types_path = ROOT / "apps" / "mobile" / "src" / "services" / "api" / "types.ts"
+    mobile_types = mobile_types_path.read_text(encoding="utf-8")
+    if "interface PanelChatStreamEvent" not in mobile_types or "message_id?" not in mobile_types:
+        print("API contract check failed.")
+        print("PanelChatStreamEvent must include optional message_id for idempotent updates.")
         return 1
 
     print("API contract check passed.")

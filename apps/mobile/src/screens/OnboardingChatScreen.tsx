@@ -65,6 +65,8 @@ export function OnboardingChatScreen() {
   const setInvestorProfileReviewed = useOnboardingStore((s) => s.setInvestorProfileReviewed)
   const setAccountSelectionCompleted = useOnboardingStore((s) => s.setAccountSelectionCompleted)
   const setOnboardingCompleted = useOnboardingStore((s) => s.setOnboardingCompleted)
+  const setOnboardingLifecycle = useOnboardingStore((s) => s.setOnboardingLifecycle)
+  const setOnboardingError = useOnboardingStore((s) => s.setOnboardingError)
 
   const addMessage = useCallback((role: "assistant" | "user", text: string, id?: string) => {
     const messageId = id ?? `${Date.now()}-${Math.random()}`
@@ -87,6 +89,9 @@ export function OnboardingChatScreen() {
     (data: VoiceOnboardingResponse, assistantMessageId?: string) => {
       if (assistantMessageId) replaceMessageText(assistantMessageId, data.message)
       else addMessage("assistant", data.message)
+
+      setOnboardingLifecycle(data.status ?? (data.is_complete ? "profile_ready" : "in_progress"))
+      setOnboardingError(data.recoverable_error ?? null)
 
       if (data.is_complete && data.profile) {
         setIsComplete(true)
@@ -128,6 +133,8 @@ export function OnboardingChatScreen() {
         setInvestorProfileReviewed(false)
         setAccountSelectionCompleted(false)
         setOnboardingCompleted(false)
+        setOnboardingLifecycle("started")
+        setOnboardingError(null)
 
         // Reset any previous conversation
         await api.voiceOnboardingReset(FINLY_DEFAULT_USER_ID)
@@ -145,8 +152,8 @@ export function OnboardingChatScreen() {
           )
         }
       } finally {
-        if (mounted) setIsBusy(false)
-      }
+      if (mounted) setIsBusy(false)
+    }
     }
 
     fetchGreeting()
@@ -170,6 +177,8 @@ export function OnboardingChatScreen() {
 
     setTextInput("")
     addMessage("user", msg)
+    setOnboardingLifecycle("in_progress")
+    setOnboardingError(null)
     setIsBusy(true)
     const assistantMessageId = addMessage("assistant", "")
     inflightAssistantIdRef.current = assistantMessageId
@@ -186,16 +195,22 @@ export function OnboardingChatScreen() {
             applyResponse(event.result, assistantMessageId)
           }
           if (event.type === "error") {
+            setOnboardingLifecycle("error")
+            setOnboardingError(event.message ?? "Something went wrong. Please try again.")
             replaceMessageText(assistantMessageId, "Something went wrong. Could you try again?")
           }
         },
       )
 
       if (streamResult.kind !== "ok") {
+        setOnboardingLifecycle("error")
+        setOnboardingError("Connection issue while chatting with Finly.")
         replaceMessageText(assistantMessageId, "Something went wrong. Could you try again?")
       }
     } catch (e) {
       if (__DEV__) console.warn("Onboarding text error:", e)
+      setOnboardingLifecycle("error")
+      setOnboardingError("Unexpected error while processing your message.")
       replaceMessageText(assistantMessageId, "Something went wrong. Could you try again?")
     } finally {
       inflightAssistantIdRef.current = null
@@ -209,6 +224,8 @@ export function OnboardingChatScreen() {
     appendToMessage,
     applyResponse,
     replaceMessageText,
+    setOnboardingError,
+    setOnboardingLifecycle,
   ])
 
   const handleSkip = useCallback(() => {

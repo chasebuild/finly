@@ -121,7 +121,12 @@ export default function WatchlistTickerRoute() {
 }
 
 function formatUsd(value: number) {
-  return `$${value.toFixed(2)}`
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value)
 }
 
 const $content = {

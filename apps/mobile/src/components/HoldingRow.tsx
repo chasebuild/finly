@@ -3,6 +3,8 @@ import { Pressable, Text, View } from "react-native"
 
 import { TickerLogo } from "@/components/TickerLogo"
 
+const formatSignedPercent = (value: number) => `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`
+
 type HoldingRowProps = {
   name: string
   logoUri?: string
@@ -53,8 +55,7 @@ export function HoldingRow({
         <Text
           className={`font-sans text-[15px] ${changePercent >= 0 ? "text-[#22B45A]" : "text-[#F04438]"}`}
         >
-          {changePercent >= 0 ? "+" : ""}
-          {changePercent}%
+          {formatSignedPercent(changePercent)}
         </Text>
       </View>
     </Pressable>

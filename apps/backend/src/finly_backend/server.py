@@ -559,27 +559,30 @@ async def chat_completions(request: ChatCompletionsRequest):
             trade_date=trade_date,
             selected_analysts=selected_analysts,
         )
-    except (AgentServerUnavailable, Exception) as e:
-        logger.exception("Agent pipeline failed")
-        return JSONResponse(
-            status_code=200,
-            content={
-                "id": completion_id,
-                "object": "chat.completion",
-                "created": created,
-                "model": request.model,
-                "choices": [
-                    {
-                        "index": 0,
-                        "message": {
-                            "role": "assistant",
-                            "content": f"I encountered an error analyzing this request. Please try again. Error: {e}",
-                        },
-                        "finish_reason": "stop",
-                    }
-                ],
+    except AgentServerUnavailable as e:
+        logger.exception("Agent pipeline unavailable")
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "error": {
+                    "message": "Agent service is temporarily unavailable. Please try again.",
+                    "type": "service_unavailable",
+                    "code": "agent_server_unavailable",
+                }
             },
-        )
+        ) from e
+    except Exception as e:
+        logger.exception("Agent pipeline failed")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": {
+                    "message": f"I encountered an error analyzing this request. Please try again. Error: {e}",
+                    "type": "internal_server_error",
+                    "code": "pipeline_failed",
+                }
+            },
+        ) from e
 
     assistant_text = result.get("content", "")
 
@@ -722,7 +725,6 @@ async def onboarding_voice(req: VoiceOnboardingRequest) -> VoiceOnboardingRespon
 
         # Run conversational onboarding
         result = await run_onboarding_chat(req.user_id, user_message)
-
         # Generate TTS for the response
         audio_bytes = await text_to_speech(result["message"])
         audio_b64 = base64.b64encode(audio_bytes).decode("ascii") if audio_bytes else None
@@ -1233,16 +1235,17 @@ async def report_chat_stream(req: PanelChatRequest):
     if not report:
         async def no_report_stream():
             message = "No report has been generated yet. Please generate a report first."
+            message_id = f"panel_{uuid.uuid4().hex}"
             fallback = {
                 "agent_role": "system",
                 "agent_name": "Finly",
                 "response": message,
             }
             yield _sse_data({"type": "started"})
-            yield _sse_data({"type": "agent_message_start", "message": fallback})
+            yield _sse_data({"type": "agent_message_start", "message": fallback, "message_id": message_id})
             for part in _split_chunks(message, chunk_size=60):
-                yield _sse_data({"type": "agent_message_delta", "message": fallback, "delta": part})
-            yield _sse_data({"type": "agent_message_done", "message": fallback})
+                yield _sse_data({"type": "agent_message_delta", "message": fallback, "delta": part, "message_id": message_id})
+            yield _sse_data({"type": "agent_message_done", "message": fallback, "message_id": message_id})
             yield _sse_data({"type": "done"})
             yield "data: [DONE]\n\n"
 
@@ -1286,6 +1289,7 @@ async def report_chat_stream(req: PanelChatRequest):
         yield _sse_data({"type": "started"})
         collected_responses: list[dict[str, str]] = []
         partial_text_by_role: dict[str, str] = {}
+        active_message_ids_by_role: dict[str, str] = {}
 
         try:
             async for event in agent_client.call_panel_chat_stream(
@@ -1304,9 +1308,11 @@ async def report_chat_stream(req: PanelChatRequest):
                     agent_role = str(response.get("agent_role", "")).strip() or "advisor"
                     agent_name = str(response.get("agent_name", "")).strip() or "Advisor"
                     response_text = str(response.get("response", "")).strip()
+                    message_id = f"panel_{agent_role}_{uuid.uuid4().hex}"
                     yield _sse_data(
                         {
                             "type": "agent_message_start",
+                            "message_id": message_id,
                             "message": {
                                 "agent_role": agent_role,
                                 "agent_name": agent_name,
@@ -1318,6 +1324,7 @@ async def report_chat_stream(req: PanelChatRequest):
                         yield _sse_data(
                             {
                                 "type": "agent_message_delta",
+                                "message_id": message_id,
                                 "message": {
                                     "agent_role": agent_role,
                                     "agent_name": agent_name,
@@ -1331,7 +1338,7 @@ async def report_chat_stream(req: PanelChatRequest):
                         "agent_name": agent_name,
                         "response": response_text,
                     }
-                    yield _sse_data({"type": "agent_message_done", "message": final_message})
+                    yield _sse_data({"type": "agent_message_done", "message": final_message, "message_id": message_id})
                     append_conversation(
                         req.user_id,
                         "panel",
@@ -1348,10 +1355,13 @@ async def report_chat_stream(req: PanelChatRequest):
                 agent_name = str(message.get("agent_name", "")).strip() or "Advisor"
 
                 if event_type == "agent_message_start":
+                    message_id = f"panel_{agent_role}_{uuid.uuid4().hex}"
                     partial_text_by_role[agent_role] = ""
+                    active_message_ids_by_role[agent_role] = message_id
                     yield _sse_data(
                         {
                             "type": "agent_message_start",
+                            "message_id": message_id,
                             "message": {
                                 "agent_role": agent_role,
                                 "agent_name": agent_name,
@@ -1365,12 +1375,17 @@ async def report_chat_stream(req: PanelChatRequest):
                     delta = str(event.get("delta", ""))
                     if not delta:
                         continue
+                    message_id = active_message_ids_by_role.get(agent_role)
+                    if message_id is None:
+                        message_id = f"panel_{agent_role}_{uuid.uuid4().hex}"
+                        active_message_ids_by_role[agent_role] = message_id
                     partial_text_by_role[agent_role] = (
                         f"{partial_text_by_role.get(agent_role, '')}{delta}"
                     )
                     yield _sse_data(
                         {
                             "type": "agent_message_delta",
+                            "message_id": message_id,
                             "message": {
                                 "agent_role": agent_role,
                                 "agent_name": agent_name,
@@ -1387,12 +1402,22 @@ async def report_chat_stream(req: PanelChatRequest):
                 response_text = str(message.get("response", "")).strip()
                 if not response_text:
                     response_text = partial_text_by_role.get(agent_role, "").strip()
+                message_id = active_message_ids_by_role.get(agent_role)
+                if message_id is None:
+                    message_id = f"panel_{agent_role}_{uuid.uuid4().hex}"
                 final_message = {
                     "agent_role": agent_role,
                     "agent_name": agent_name,
                     "response": response_text,
                 }
-                yield _sse_data({"type": "agent_message_done", "message": final_message})
+                yield _sse_data(
+                    {
+                        "type": "agent_message_done",
+                        "message": final_message,
+                        "message_id": message_id,
+                    }
+                )
+                active_message_ids_by_role.pop(agent_role, None)
 
                 append_conversation(
                     req.user_id,
@@ -1404,12 +1429,13 @@ async def report_chat_stream(req: PanelChatRequest):
                 )
                 collected_responses.append(final_message)
         except AgentServerUnavailable as e:
+            logger.warning("panel.stream_unavailable user_id=%s report_id=%s", req.user_id, report["id"])
             yield _sse_data({"type": "error", "message": str(e)})
             yield _sse_data({"type": "done"})
             yield "data: [DONE]\n\n"
             return
         except Exception as e:
-            logger.exception("Panel chat stream failed")
+            logger.exception("panel.stream_failed user_id=%s report_id=%s", req.user_id, report["id"])
             yield _sse_data({"type": "error", "message": str(e)})
             yield _sse_data({"type": "done"})
             yield "data: [DONE]\n\n"

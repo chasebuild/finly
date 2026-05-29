@@ -4,9 +4,10 @@ import { Pressable, Text, View } from "react-native"
 
 import { TickerLogo } from "@/components/TickerLogo"
 import type { HeartbeatResultResponse } from "@/services/api/types"
+import { uiTokens } from "@/theme/uiTokens"
 import { getTickerLogoUri } from "@/utils/tickerLogo"
 
-const BORDER = "#C7D0DC"
+const BORDER = uiTokens.border
 
 const decisionColors: Record<string, { bg: string; text: string }> = {
   BUY: { bg: "#E9F7EF", text: "#1F8A4C" },
