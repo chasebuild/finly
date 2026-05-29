@@ -1,5 +1,5 @@
 export const uiTokens = {
-  surfaceBackground: "#FBFCFF",
+  surfaceBackground: "#F7F8FF",
   cardBackground: "#FFFFFF",
   mutedBackground: "#F7F9FC",
   softBackground: "#F4F7FF",
@@ -10,4 +10,19 @@ export const uiTokens = {
   actionPrimary: "#2453FF",
   success: "#22B45A",
   danger: "#F04438",
+  reference: {
+    background: "#F7F8FF",
+    card: "#FFFFFF",
+    panel: "#F1F1FF",
+    violet: "#6C55FF",
+    violetDark: "#151433",
+    blue: "#4C9CFF",
+    mint: "#66F0B3",
+    success: "#19B88F",
+    danger: "#EF5B5B",
+    ink: "#19172A",
+    muted: "#77728D",
+    border: "#E2E4F3",
+    shadow: "#3A3560",
+  },
 } as const
