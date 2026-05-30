@@ -24,5 +24,26 @@ export const uiTokens = {
     muted: "#77728D",
     border: "#E2E4F3",
     shadow: "#3A3560",
+    type: {
+      hero: 26,
+      title: 24,
+      section: 24,
+      cardTitle: 18,
+      body: 15,
+      meta: 13,
+      caption: 12,
+    },
+    radius: {
+      sm: 12,
+      md: 18,
+      lg: 22,
+      xl: 24,
+      sheet: 32,
+    },
+    spacing: {
+      screenX: 20,
+      section: 28,
+      card: 16,
+    },
   },
 } as const

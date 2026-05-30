@@ -1,5 +1,8 @@
+/* eslint-disable react-native/no-inline-styles */
 /* eslint-disable no-restricted-imports */
+import type { ReactNode } from "react"
 import { Pressable, Text, View } from "react-native"
+import { Ionicons } from "@expo/vector-icons"
 import Svg, {
   Circle,
   Defs,
@@ -8,7 +11,6 @@ import Svg, {
   Polyline,
   Stop,
 } from "react-native-svg"
-import { Ionicons } from "@expo/vector-icons"
 
 import { TickerLogo } from "@/components/TickerLogo"
 import { uiTokens } from "@/theme/uiTokens"
@@ -30,7 +32,8 @@ type ProgressRingProps = {
   strokeWidth?: number
   trackColor?: string
   color?: string
-  children?: React.ReactNode
+  segments?: Array<{ color: string; value: number }>
+  children?: ReactNode
 }
 
 type SparklineProps = {
@@ -80,14 +83,12 @@ export function HeaderIconButton({ icon, onPress }: HeaderIconButtonProps) {
 export function SectionHeader({ title, actionLabel, onActionPress }: SectionHeaderProps) {
   return (
     <View className="flex-row items-center justify-between px-1">
-      <Text className="font-sans text-[28px] font-semibold leading-[34px] text-[#19172A]">
+      <Text className="font-sans text-[24px] font-semibold leading-[30px] text-[#19172A]">
         {title}
       </Text>
       {actionLabel ? (
         <Pressable className="min-h-10 justify-center px-1" onPress={onActionPress}>
-          <Text className="font-sans text-[16px] font-semibold text-[#6A4DF7]">
-            {actionLabel}
-          </Text>
+          <Text className="font-sans text-[15px] font-semibold text-[#6A4DF7]">{actionLabel}</Text>
         </Pressable>
       ) : null}
     </View>
@@ -100,11 +101,13 @@ export function ProgressRing({
   strokeWidth = 10,
   trackColor = "#EEF0FA",
   color = "#6C55FF",
+  segments,
   children,
 }: ProgressRingProps) {
   const radius = (size - strokeWidth) / 2
   const circumference = 2 * Math.PI * radius
   const dashOffset = circumference * (1 - clamp01(progress))
+  let segmentOffset = 0
 
   return (
     <View style={{ width: size, height: size }}>
@@ -117,19 +120,44 @@ export function ProgressRing({
           strokeWidth={strokeWidth}
           fill="transparent"
         />
-        <Circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={color}
-          strokeWidth={strokeWidth}
-          fill="transparent"
-          strokeLinecap="round"
-          strokeDasharray={`${circumference} ${circumference}`}
-          strokeDashoffset={dashOffset}
-          rotation="-90"
-          origin={`${size / 2}, ${size / 2}`}
-        />
+        {segments && segments.length > 0 ? (
+          segments.map((segment, index) => {
+            const segmentProgress = clamp01(segment.value)
+            const arcLength = circumference * Math.max(segmentProgress - 0.012, 0)
+            const circle = (
+              <Circle
+                key={`${segment.color}-${index}`}
+                cx={size / 2}
+                cy={size / 2}
+                r={radius}
+                stroke={segment.color}
+                strokeWidth={strokeWidth}
+                fill="transparent"
+                strokeLinecap="round"
+                strokeDasharray={`${arcLength} ${circumference}`}
+                strokeDashoffset={-segmentOffset * circumference}
+                rotation="-90"
+                origin={`${size / 2}, ${size / 2}`}
+              />
+            )
+            segmentOffset += segmentProgress
+            return circle
+          })
+        ) : (
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke={color}
+            strokeWidth={strokeWidth}
+            fill="transparent"
+            strokeLinecap="round"
+            strokeDasharray={`${circumference} ${circumference}`}
+            strokeDashoffset={dashOffset}
+            rotation="-90"
+            origin={`${size / 2}, ${size / 2}`}
+          />
+        )}
       </Svg>
       {children ? (
         <View className="absolute inset-0 items-center justify-center">{children}</View>
@@ -188,7 +216,7 @@ export function InvestmentCard({
 
   return (
     <Pressable
-      className="mr-4 w-[184px] rounded-[18px] border bg-white px-4 py-4"
+      className="mr-4 w-[172px] rounded-[18px] border bg-white px-4 py-4"
       style={{
         borderColor: uiTokens.reference.border,
         shadowColor: uiTokens.reference.shadow,
@@ -202,7 +230,7 @@ export function InvestmentCard({
       <View className="flex-row items-center">
         <TickerLogo ticker={ticker} logoUri={logoUri} size={34} />
         <Text
-          className="ml-3 flex-1 font-sans text-[18px] font-semibold text-[#19172A]"
+          className="ml-3 flex-1 font-sans text-[16px] font-semibold text-[#19172A]"
           numberOfLines={1}
         >
           {name}
@@ -218,7 +246,14 @@ export function InvestmentCard({
         />
       </View>
       <View className="mt-4 flex-row items-end justify-between">
-        <Text className="font-sans text-[18px] font-semibold text-[#19172A]">{value}</Text>
+        <Text
+          adjustsFontSizeToFit
+          className="max-w-[92px] font-sans text-[17px] font-semibold text-[#19172A]"
+          minimumFontScale={0.78}
+          numberOfLines={1}
+        >
+          {value}
+        </Text>
         <Text className="font-sans text-[13px] font-semibold" style={{ color: trendColor }}>
           {isPositive ? "+" : ""}
           {changePercent.toFixed(2)}%

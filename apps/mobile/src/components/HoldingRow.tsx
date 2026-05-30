@@ -2,6 +2,7 @@
 import { Pressable, Text, View } from "react-native"
 
 import { TickerLogo } from "@/components/TickerLogo"
+import { uiTokens } from "@/theme/uiTokens"
 
 const formatSignedPercent = (value: number) => `${value >= 0 ? "+" : ""}${value.toFixed(2)}%`
 
@@ -26,7 +27,7 @@ export function HoldingRow({
   allocationPercent,
   changePercent,
   onPress,
-  borderColor = "#EDEFF4",
+  borderColor = uiTokens.reference.border,
 }: HoldingRowProps) {
   return (
     <Pressable
@@ -37,23 +38,23 @@ export function HoldingRow({
       <View className="flex-row items-center flex-1 pr-3">
         <TickerLogo ticker={ticker} logoUri={logoUri} />
         <View className="ml-3">
-          <Text className="font-sans text-[18px] font-semibold text-[#0F1728]">{name}</Text>
-          <Text className="font-sans text-[16px] text-[#7A8699]">{ticker}</Text>
+          <Text className="font-sans text-[16px] font-semibold text-[#19172A]">{name}</Text>
+          <Text className="font-sans text-[14px] text-[#77728D]">{ticker}</Text>
           {typeof shares === "number" ? (
-            <Text className="mt-0.5 font-sans text-[13px] text-[#7A8699]">
+            <Text className="mt-0.5 font-sans text-[12px] text-[#77728D]">
               {shares} shares . {allocationPercent.toFixed(1)}% of portfolio
             </Text>
           ) : (
-            <Text className="mt-0.5 font-sans text-[13px] text-[#7A8699]">
+            <Text className="mt-0.5 font-sans text-[12px] text-[#77728D]">
               {allocationPercent.toFixed(1)}% of portfolio
             </Text>
           )}
         </View>
       </View>
       <View className="items-end">
-        <Text className="font-sans text-[20px] font-semibold text-[#0F1728]">{value}</Text>
+        <Text className="font-sans text-[17px] font-semibold text-[#19172A]">{value}</Text>
         <Text
-          className={`font-sans text-[15px] ${changePercent >= 0 ? "text-[#22B45A]" : "text-[#F04438]"}`}
+          className={`font-sans text-[13px] ${changePercent >= 0 ? "text-[#19B88F]" : "text-[#EF5B5B]"}`}
         >
           {formatSignedPercent(changePercent)}
         </Text>
