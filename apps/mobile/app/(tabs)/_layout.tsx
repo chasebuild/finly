@@ -2,9 +2,11 @@
 import { Tabs } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 
-const ICON_BLACK = "#0F1728"
-const LABEL_INACTIVE = "#0F1728"
-const LABEL_ACTIVE = "#0F1728"
+import { uiTokens } from "@/theme/uiTokens"
+
+const ACTIVE = uiTokens.reference.violet
+const INACTIVE = uiTokens.reference.muted
+const SHELL_BORDER = uiTokens.reference.border
 
 type TabIconProps = {
   focused: boolean
@@ -15,7 +17,7 @@ type TabIconProps = {
 function TabIcon({ focused, activeIcon, inactiveIcon }: TabIconProps) {
   const iconName = focused ? activeIcon : (inactiveIcon ?? activeIcon)
 
-  return <Ionicons name={iconName} size={22} color={ICON_BLACK} />
+  return <Ionicons name={iconName} size={24} color={focused ? ACTIVE : INACTIVE} />
 }
 
 export default function TabsLayout() {
@@ -23,31 +25,32 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: LABEL_ACTIVE,
-        tabBarInactiveTintColor: LABEL_INACTIVE,
+        tabBarActiveTintColor: ACTIVE,
+        tabBarInactiveTintColor: INACTIVE,
         tabBarStyle: {
           position: "absolute",
-          left: 22,
-          right: 22,
-          bottom: 14,
-          height: 88,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: 92,
           borderTopWidth: 0,
-          borderRadius: 30,
-          backgroundColor: "rgba(255,255,255,0.94)",
+          borderTopLeftRadius: 28,
+          borderTopRightRadius: 28,
+          backgroundColor: "rgba(255,255,255,0.97)",
           borderWidth: 1,
-          borderColor: "#EEF2F7",
-          paddingTop: 10,
-          paddingBottom: 16,
-          shadowColor: "#0F1728",
-          shadowOffset: { width: 0, height: 12 },
-          shadowOpacity: 0.06,
-          shadowRadius: 30,
-          elevation: 10,
+          borderColor: SHELL_BORDER,
+          paddingTop: 9,
+          paddingBottom: 15,
+          shadowColor: "#3A3560",
+          shadowOffset: { width: 0, height: -10 },
+          shadowOpacity: 0.08,
+          shadowRadius: 20,
+          elevation: 16,
         },
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: "600",
-          marginTop: 6,
+          fontWeight: "500",
+          marginTop: 4,
         },
       }}
     >
@@ -97,22 +100,23 @@ export default function TabsLayout() {
           title: "Settings",
           tabBarStyle: {
             position: "absolute",
-            left: 22,
-            right: 22,
-            bottom: 14,
-            height: 88,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 92,
             borderTopWidth: 0,
-            borderRadius: 30,
-            backgroundColor: "rgba(255,255,255,0.94)",
+            borderTopLeftRadius: 28,
+            borderTopRightRadius: 28,
+            backgroundColor: "rgba(255,255,255,0.97)",
             borderWidth: 1,
-            borderColor: "#C7D0DC",
-            paddingTop: 10,
-            paddingBottom: 16,
-            shadowColor: "#0F1728",
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.02,
-            shadowRadius: 16,
-            elevation: 4,
+            borderColor: SHELL_BORDER,
+            paddingTop: 9,
+            paddingBottom: 15,
+            shadowColor: "#3A3560",
+            shadowOffset: { width: 0, height: -10 },
+            shadowOpacity: 0.08,
+            shadowRadius: 20,
+            elevation: 16,
           },
           tabBarIcon: ({ focused }) => (
             <TabIcon focused={focused} activeIcon="person" inactiveIcon="person-outline" />

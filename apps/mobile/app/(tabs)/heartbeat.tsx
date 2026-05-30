@@ -1,3 +1,5 @@
+/* eslint-disable react-native/no-color-literals */
+/* eslint-disable react-native/no-inline-styles */
 /* eslint-disable no-restricted-imports */
 import { useCallback, useState } from "react"
 import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from "react-native"
@@ -7,7 +9,7 @@ import { SafeAreaView } from "react-native-safe-area-context"
 
 import { AnalysisCard } from "@/components/heartbeat/AnalysisCard"
 import { RuleCard } from "@/components/heartbeat/RuleCard"
-import { IosHeader } from "@/components/IosHeader"
+import { HeaderIconButton } from "@/components/ReferenceFinanceWidgets"
 import { TickerLogo } from "@/components/TickerLogo"
 import { resolveScopedFinlyUserId } from "@/services/agentUser"
 import { useHeartbeatStore } from "@/stores/heartbeatStore"
@@ -17,8 +19,8 @@ import { DEFAULT_STOCK_ACCOUNT_ID } from "@/utils/mockStockAccounts"
 import { useSelectedPortfolioData } from "@/utils/selectedPortfolio"
 import { getTickerLogoUri } from "@/utils/tickerLogo"
 
-const BLUE = uiTokens.actionPrimary
-const BORDER = uiTokens.border
+const BLUE = uiTokens.reference.violet
+const BORDER = uiTokens.reference.border
 
 const decisionColors: Record<string, { bg: string; text: string }> = {
   BUY: { bg: "#E9F7EF", text: "#1F8A4C" },
@@ -59,7 +61,6 @@ export default function HeartbeatTab() {
   const isAnalyzing = useHeartbeatStore((s) => s.isAnalyzing)
   const analyzingTickers = useHeartbeatStore((s) => s.analyzingTickers)
   const completedTickers = useHeartbeatStore((s) => s.completedTickers)
-  const currentTicker = useHeartbeatStore((s) => s.currentTicker)
   const liveResults = useHeartbeatStore((s) => s.liveResults)
   const isCreatingRule = useHeartbeatStore((s) => s.isCreatingRule)
   const lastAnalysisError = useHeartbeatStore((s) => s.lastAnalysisError)
@@ -96,9 +97,17 @@ export default function HeartbeatTab() {
   const hasHoldings = holdings.length > 0
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: uiTokens.surfaceBackground }}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: uiTokens.reference.background }}>
       <ScrollView contentContainerStyle={$scrollContent}>
-        <IosHeader title="Heartbeat" titleClassName="text-[20px] leading-[24px]" />
+        <View className="px-5 pt-3">
+          <View className="flex-row items-center justify-between">
+            <HeaderIconButton icon="pulse-outline" />
+            <Text className="font-sans text-[23px] font-semibold text-[#19172A]">Heartbeat</Text>
+            <HeaderIconButton icon="notifications-outline" />
+          </View>
+
+          <View className="my-5 h-px bg-[#E5E7F4]" />
+        </View>
 
         <View className="px-4">
           {/* ─── Analyze Card ─── */}
@@ -107,7 +116,7 @@ export default function HeartbeatTab() {
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ delay: 60, duration: 420, type: "timing" }}
           >
-            <View className="rounded-[30px] border bg-white p-5" style={{ borderColor: BORDER }}>
+            <View className="rounded-[22px] border bg-white p-5" style={{ borderColor: BORDER }}>
               <Text className="font-sans text-[24px] font-semibold text-[#0F1728]">
                 Portfolio Risk Scan
               </Text>
@@ -118,7 +127,7 @@ export default function HeartbeatTab() {
               <Pressable
                 className="mt-4 items-center rounded-full py-3"
                 style={{
-                  backgroundColor: isAnalyzing || !hasHoldings ? "#BFD0FF" : BLUE,
+                  backgroundColor: isAnalyzing || !hasHoldings ? "#CFC8FF" : BLUE,
                 }}
                 disabled={isAnalyzing || !hasHoldings}
                 onPress={handleAnalyze}
@@ -169,7 +178,6 @@ export default function HeartbeatTab() {
                 <View className="mt-4">
                   {analyzingTickers.map((ticker) => {
                     const isDone = completedTickers.includes(ticker)
-                    const isCurrent = currentTicker === ticker
                     const live = liveResults[ticker]
                     const colors = live
                       ? (decisionColors[live.decision] ?? decisionColors.HOLD)
@@ -215,7 +223,7 @@ export default function HeartbeatTab() {
             transition={{ delay: 140, duration: 420, type: "timing" }}
           >
             <View
-              className="mt-4 rounded-[30px] border bg-white p-4"
+              className="mt-4 rounded-[22px] border bg-white p-4"
               style={{ borderColor: BORDER }}
             >
               <Text className="font-sans text-[24px] font-semibold text-[#0F1728]">
@@ -224,7 +232,7 @@ export default function HeartbeatTab() {
 
               {/* Rule input */}
               <View className="mt-3 flex-row items-center">
-                <View className="flex-1 rounded-full bg-[#F3F6FC] px-4 py-2.5">
+                <View className="flex-1 rounded-full bg-[#F1F0FF] px-4 py-2.5">
                   <TextInput
                     value={ruleDraft}
                     onChangeText={setRuleDraft}
@@ -239,7 +247,7 @@ export default function HeartbeatTab() {
                 <Pressable
                   className="ml-2 h-11 w-11 items-center justify-center rounded-full"
                   style={{
-                    backgroundColor: ruleDraft.trim() && !isCreatingRule ? BLUE : "#BFD0FF",
+                    backgroundColor: ruleDraft.trim() && !isCreatingRule ? BLUE : "#CFC8FF",
                   }}
                   disabled={!ruleDraft.trim() || isCreatingRule}
                   onPress={handleCreateRule}
@@ -262,7 +270,7 @@ export default function HeartbeatTab() {
                     No rules yet
                   </Text>
                   <Text className="mt-1 font-sans text-[14px] leading-6 text-[#7A8699]">
-                    Create a rule in natural language and we'll monitor it during market hours.
+                    Create a rule in natural language and we will monitor it during market hours.
                   </Text>
                 </View>
               ) : (
@@ -287,7 +295,7 @@ export default function HeartbeatTab() {
             transition={{ delay: 220, duration: 420, type: "timing" }}
           >
             <View
-              className="mt-4 rounded-[30px] border bg-white p-4"
+              className="mt-4 rounded-[22px] border bg-white p-4"
               style={{ borderColor: BORDER }}
             >
               <Text className="font-sans text-[24px] font-semibold text-[#0F1728]">

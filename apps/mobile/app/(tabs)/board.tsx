@@ -1,3 +1,4 @@
+/* eslint-disable react-native/no-inline-styles */
 import { useMemo, useState } from "react"
 /* eslint-disable no-restricted-imports */
 import {
@@ -13,6 +14,7 @@ import { useRouter } from "expo-router"
 import { Ionicons } from "@expo/vector-icons"
 import { SafeAreaView } from "react-native-safe-area-context"
 
+import { HeaderIconButton } from "@/components/ReferenceFinanceWidgets"
 import { TickerLogo } from "@/components/TickerLogo"
 import { useAgentBoardStore } from "@/stores/agentBoardStore"
 import { uiTokens } from "@/theme/uiTokens"
@@ -20,8 +22,8 @@ import { getRandomAgentAvatar } from "@/utils/agentAvatars"
 import { useSelectedPortfolioData } from "@/utils/selectedPortfolio"
 import { getTickerLogoUri } from "@/utils/tickerLogo"
 
-const BLUE = uiTokens.actionPrimary
-const BORDER = uiTokens.border
+const BLUE = uiTokens.reference.violet
+const BORDER = uiTokens.reference.border
 
 const decisionColors = {
   Buy: { background: "#E9F7EF", text: "#1F8A4C" },
@@ -83,31 +85,25 @@ export default function BoardTab() {
   }
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: uiTokens.surfaceBackground }}>
+    <SafeAreaView className="flex-1" style={{ backgroundColor: uiTokens.reference.background }}>
       <ScrollView className="flex-1" contentContainerStyle={$content}>
-        <View className="px-4 pb-4 pt-2">
-          <View
-            className="flex-row items-center justify-between rounded-[28px] border bg-white px-3 py-3"
-            style={{ borderColor: BORDER }}
-          >
-            <View className="flex-1">
-              <Text className="font-sans text-[20px] font-semibold tracking-[-0.3px] text-[#0F1728]">
-                Board Threads
-              </Text>
-              <Text className="font-sans text-[14px] text-[#7A8699]">
-                Explain what you want, let Finly narrow it down, then review the team report
-              </Text>
-            </View>
+        <View className="px-5 pt-3">
+          <View className="flex-row items-center justify-between">
+            <HeaderIconButton icon="chatbubbles-outline" />
+            <Text className="font-sans text-[23px] font-semibold text-[#19172A]">Board</Text>
+            <HeaderIconButton icon="notifications-outline" />
           </View>
+
+          <View className="my-5 h-px bg-[#E5E7F4]" />
         </View>
 
         <View className="px-4">
-          <View className="rounded-[30px] border border-[#C7D0DC] bg-white p-4">
+          <View className="rounded-[22px] border bg-white p-4" style={{ borderColor: BORDER }}>
             <Text className="font-sans text-[13px] font-semibold tracking-[1.2px] text-[#7A8699]">
               NEW THREAD
             </Text>
             <View className="mt-3 flex-row items-center">
-              <View className="flex-1 rounded-full bg-[#F3F6FC] px-4 py-2.5">
+              <View className="flex-1 rounded-full bg-[#F1F0FF] px-4 py-2.5">
                 <TextInput
                   value={draft}
                   onChangeText={setDraft}
@@ -129,8 +125,11 @@ export default function BoardTab() {
             </View>
           </View>
 
-          <View className="mt-4 rounded-[28px] border border-[#C7D0DC] bg-white px-4 py-3">
-            <View className="flex-row items-center rounded-full bg-[#F4F7FF] px-4 py-2.5">
+          <View
+            className="mt-4 rounded-[22px] border bg-white px-4 py-3"
+            style={{ borderColor: BORDER }}
+          >
+            <View className="flex-row items-center rounded-full bg-[#F1F0FF] px-4 py-2.5">
               <Ionicons name="search" size={18} color="#7A8699" />
               <TextInput
                 value={searchQuery}
@@ -144,7 +143,7 @@ export default function BoardTab() {
 
           <View className="mt-4 gap-3">
             {!hydrated ? (
-              <View className="rounded-[28px] border border-[#C7D0DC] bg-white p-5">
+              <View className="rounded-[22px] border bg-white p-5" style={{ borderColor: BORDER }}>
                 <ActivityIndicator color={BLUE} />
               </View>
             ) : null}
@@ -153,7 +152,7 @@ export default function BoardTab() {
               filteredThreads.map((thread) => (
                 <Pressable
                   key={thread.id}
-                  className="rounded-[28px] border bg-white p-4"
+                  className="rounded-[22px] border bg-white p-4"
                   style={{ borderColor: BORDER }}
                   onPress={() => router.push(`/thread/${thread.id}`)}
                 >
@@ -243,7 +242,7 @@ export default function BoardTab() {
               ))}
 
             {hydrated && filteredThreads.length === 0 ? (
-              <View className="rounded-[28px] border border-[#C7D0DC] bg-white p-5">
+              <View className="rounded-[22px] border bg-white p-5" style={{ borderColor: BORDER }}>
                 <Text className="font-sans text-[18px] font-semibold text-[#0F1728]">
                   No conversations yet
                 </Text>

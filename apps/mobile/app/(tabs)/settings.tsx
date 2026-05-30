@@ -3,20 +3,21 @@ import { Pressable, ScrollView, Text, TextInput, View } from "react-native"
 import { useRouter } from "expo-router"
 import { SafeAreaView } from "react-native-safe-area-context"
 
-import { IosHeader } from "@/components/IosHeader"
+import { HeaderIconButton } from "@/components/ReferenceFinanceWidgets"
 import {
   FinancialKnowledge,
   InvestmentHorizon,
   RiskExpertise,
   useOnboardingStore,
 } from "@/stores/onboardingStore"
+import { uiTokens } from "@/theme/uiTokens"
 import { getInvestorAvatarEmoji } from "@/utils/investorAvatar"
 
 const riskLevels: RiskExpertise[] = ["beginner", "intermediate", "expert"]
 const horizons: InvestmentHorizon[] = ["short", "medium", "long"]
 const knowledgeLevels: FinancialKnowledge[] = ["novice", "savvy", "pro"]
-const surfaceBorder = "#C7D0DC"
-const groupedBackground = "#F2F4F8"
+const surfaceBorder = uiTokens.reference.border
+const groupedBackground = "#F1F0FF"
 const dangerBorder = "#F3D1CD"
 
 export default function SettingsTab() {
@@ -48,9 +49,17 @@ export default function SettingsTab() {
   ].join(" • ")
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F2F2F7]">
+    <SafeAreaView className="flex-1" style={{ backgroundColor: uiTokens.reference.background }}>
       <ScrollView className="flex-1" contentContainerStyle={$scrollContent}>
-        <IosHeader title="Settings" titleClassName="text-[20px] leading-[24px]" />
+        <View className="px-5 pt-3">
+          <View className="flex-row items-center justify-between">
+            <HeaderIconButton icon="settings-outline" />
+            <Text className="font-sans text-[23px] font-semibold text-[#19172A]">Settings</Text>
+            <HeaderIconButton icon="notifications-outline" />
+          </View>
+
+          <View className="my-5 h-px bg-[#E5E7F4]" />
+        </View>
 
         <View className="px-4">
           <View
@@ -58,13 +67,13 @@ export default function SettingsTab() {
             style={{ borderColor: surfaceBorder }}
           >
             <View className="flex-row items-center justify-between">
-              <View className="h-14 w-14 items-center justify-center rounded-full bg-[#2453FF]">
+              <View className="h-14 w-14 items-center justify-center rounded-full bg-[#6C55FF]">
                 <Text className="font-sans text-[22px] font-semibold text-white">
                   {avatarEmoji}
                 </Text>
               </View>
-              <View className="rounded-full bg-[#EEF3FF] px-3 py-2">
-                <Text className="font-sans text-[12px] font-semibold tracking-[0.4px] text-[#2453FF]">
+              <View className="rounded-full bg-[#F1F0FF] px-3 py-2">
+                <Text className="font-sans text-[12px] font-semibold tracking-[0.4px] text-[#6C55FF]">
                   PROFILE ACTIVE
                 </Text>
               </View>
@@ -252,7 +261,7 @@ function Chip({
   return (
     <Pressable
       className={`mb-1 mr-1 min-h-11 min-w-[94px] flex-1 items-center justify-center rounded-[18px] px-4 py-3 ${
-        selected ? "bg-[#2453FF]" : "bg-transparent"
+        selected ? "bg-[#6C55FF]" : "bg-transparent"
       }`}
       onPress={onPress}
     >
